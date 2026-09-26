@@ -14,6 +14,9 @@ public static class ErrorMessages
     public const string EmptyDocument =
         "Boş bir Word dosyası yüklenemez.";
 
+    public const string DocumentHasNoContent =
+        "Word dosyasında işlenebilir metin bulunamadı.";
+
     public const string BookNotFound =
         "Kitap bulunamadı.";
 

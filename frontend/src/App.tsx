@@ -96,6 +96,9 @@ function App() {
   ) => {
     setError("");
 
+    const validationMessages:
+      string[] = [];
+
     const docxFiles =
       incomingFiles.filter(
         (file) =>
@@ -108,32 +111,86 @@ function App() {
       docxFiles.length !==
       incomingFiles.length
     ) {
-      setError(
+      validationMessages.push(
         "Yalnızca .docx uzantılı Word dosyaları yükleyebilirsiniz.",
       );
     }
 
-    if (docxFiles.length === 0) {
+    const emptyFiles =
+      docxFiles.filter(
+        (file) =>
+          file.size === 0,
+      );
+
+    if (emptyFiles.length > 0) {
+      const fileNames =
+        emptyFiles
+          .map(
+            (file) =>
+              file.name,
+          )
+          .join(", ");
+
+      validationMessages.push(
+        `Boş Word dosyası yüklenemez: ${fileNames}`,
+      );
+    }
+
+    const validDocxFiles =
+      docxFiles.filter(
+        (file) =>
+          file.size > 0,
+      );
+
+    if (
+      validDocxFiles.length === 0
+    ) {
+      setError(
+        validationMessages.join(
+          " ",
+        ),
+      );
+
       return;
     }
 
     const uniqueFiles =
-      docxFiles.filter(
-        (file) =>
-          !documents.some(
-            (existing) =>
-              existing.name ===
-                file.name &&
-              existing.size ===
-                file.size,
-          ),
+      validDocxFiles.filter(
+        (
+          file,
+          index,
+          files,
+        ) => {
+          const alreadyUploaded =
+            documents.some(
+              (existing) =>
+                existing.name ===
+                  file.name &&
+                existing.size ===
+                  file.size,
+            );
+
+          const firstIndex =
+            files.findIndex(
+              (candidate) =>
+                candidate.name ===
+                  file.name &&
+                candidate.size ===
+                  file.size,
+            );
+
+          return (
+            !alreadyUploaded &&
+            firstIndex === index
+          );
+        },
       );
 
     if (
       uniqueFiles.length !==
-      docxFiles.length
+      validDocxFiles.length
     ) {
-      setError(
+      validationMessages.push(
         "Aynı dosya birden fazla kez eklenemez.",
       );
     }
@@ -142,8 +199,14 @@ function App() {
       10 - documents.length;
 
     if (availableSlots <= 0) {
-      setError(
+      validationMessages.push(
         "En fazla 10 adet Word dosyası yükleyebilirsiniz.",
+      );
+
+      setError(
+        validationMessages.join(
+          " ",
+        ),
       );
 
       return;
@@ -153,7 +216,7 @@ function App() {
       uniqueFiles.length >
       availableSlots
     ) {
-      setError(
+      validationMessages.push(
         `Yalnızca ${availableSlots} dosya daha ekleyebilirsiniz.`,
       );
     }
@@ -175,12 +238,27 @@ function App() {
         }),
       );
 
-    setDocuments(
-      (current) => [
-        ...current,
-        ...mappedFiles,
-      ],
-    );
+    if (
+      mappedFiles.length > 0
+    ) {
+      setDocuments(
+        (current) => [
+          ...current,
+          ...mappedFiles,
+        ],
+      );
+    }
+
+    if (
+      validationMessages.length >
+      0
+    ) {
+      setError(
+        validationMessages.join(
+          " ",
+        ),
+      );
+    }
   };
 
   const handleRemoveDocument = (
@@ -249,6 +327,8 @@ function App() {
         return reordered;
       },
     );
+
+    setError("");
   };
 
   const canGenerate =
@@ -362,8 +442,7 @@ function App() {
     };
 
   if (
-    status ===
-    "generating"
+    status === "generating"
   ) {
     return (
       <main
@@ -740,90 +819,92 @@ function App() {
               sm:p-7
             "
           >
-            {canGenerate && (
-              <div
-                className="
-                  mb-4
-                  flex
-                  items-center
-                  gap-2
-                  rounded-xl
-                  border
-                  border-green-200
-                  bg-green-50
-                  px-4
-                  py-3.5
-                  text-sm
-                  text-green-700
-                "
-              >
-                <CheckCircle2
-                  size={20}
-                  className="shrink-0"
-                />
-
-                <div>
-                  <p className="font-semibold">
-                    Her şey hazır
-                  </p>
-
-                  <p className="mt-0.5">
-                    E-kitabınızı artık
-                    oluşturabilirsiniz.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!canGenerate && (
-              <div
-                className="
-                  mb-4
-                  flex
-                  items-start
-                  gap-3
-                  rounded-xl
-                  border
-                  border-amber-200
-                  bg-amber-50
-                  px-4
-                  py-3.5
-                "
-              >
-                <AlertTriangle
-                  size={20}
+            {canGenerate &&
+              !error && (
+                <div
                   className="
-                    mt-0.5
-                    shrink-0
-                    text-amber-600
+                    mb-4
+                    flex
+                    items-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-green-200
+                    bg-green-50
+                    px-4
+                    py-3.5
+                    text-sm
+                    text-green-700
                   "
-                />
+                >
+                  <CheckCircle2
+                    size={20}
+                    className="shrink-0"
+                  />
 
-                <div>
-                  <p
-                    className="
-                      text-sm
-                      font-semibold
-                      text-amber-900
-                    "
-                  >
-                    Eksik bilgi var
-                  </p>
+                  <div>
+                    <p className="font-semibold">
+                      Her şey hazır
+                    </p>
 
-                  <p
+                    <p className="mt-0.5">
+                      E-kitabınızı artık
+                      oluşturabilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+            {!canGenerate &&
+              !error && (
+                <div
+                  className="
+                    mb-4
+                    flex
+                    items-start
+                    gap-3
+                    rounded-xl
+                    border
+                    border-amber-200
+                    bg-amber-50
+                    px-4
+                    py-3.5
+                  "
+                >
+                  <AlertTriangle
+                    size={20}
                     className="
                       mt-0.5
-                      text-sm
-                      text-amber-700
+                      shrink-0
+                      text-amber-600
                     "
-                  >
-                    {
-                      getRequirementMessage()
-                    }
-                  </p>
+                  />
+
+                  <div>
+                    <p
+                      className="
+                        text-sm
+                        font-semibold
+                        text-amber-900
+                      "
+                    >
+                      Eksik bilgi var
+                    </p>
+
+                    <p
+                      className="
+                        mt-0.5
+                        text-sm
+                        text-amber-700
+                      "
+                    >
+                      {
+                        getRequirementMessage()
+                      }
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <button
               type="button"
@@ -845,7 +926,6 @@ function App() {
                 text-sm
                 font-semibold
                 transition-all
-
                 ${
                   canGenerate
                     ? `

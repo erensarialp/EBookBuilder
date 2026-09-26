@@ -30,7 +30,7 @@ const steps = [
   {
     title: "PDF oluşturuluyor",
     description:
-      "Bildiriler tek bir e-kitapta birleştiriliyor.",
+      "Dosyalar tek bir e-kitapta birleştiriliyor.",
   },
 ];
 

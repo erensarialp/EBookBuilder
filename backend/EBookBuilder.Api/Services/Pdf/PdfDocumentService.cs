@@ -179,7 +179,7 @@ public class PdfDocumentService : IPdfDocumentService
                     .PaddingTop(16)
                     .AlignCenter()
                     .Text(
-                        "Bildiriler E-Kitabı"
+                        "Dosyalar E-Kitabı"
                     )
                     .FontSize(16)
                     .FontColor(

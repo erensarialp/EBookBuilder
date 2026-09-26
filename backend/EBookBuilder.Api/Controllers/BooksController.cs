@@ -9,7 +9,8 @@ namespace EBookBuilder.Api.Controllers;
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
-    private readonly IBookService _bookService;
+    private readonly IBookService
+        _bookService;
 
     private readonly ILogger<BooksController>
         _logger;
@@ -18,25 +19,25 @@ public class BooksController : ControllerBase
         IBookService bookService,
         ILogger<BooksController> logger)
     {
-        _bookService = bookService;
-        _logger = logger;
+        _bookService =
+            bookService;
+
+        _logger =
+            logger;
     }
 
-    /*
-     * GET
-     * /api/books/1
-     */
-
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(
-        int id,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult>
+        GetById(
+            int id,
+            CancellationToken cancellationToken)
     {
         var book =
-            await _bookService.GetByIdAsync(
-                id,
-                cancellationToken
-            );
+            await _bookService
+                .GetByIdAsync(
+                    id,
+                    cancellationToken
+                );
 
         if (book is null)
         {
@@ -44,7 +45,8 @@ public class BooksController : ControllerBase
                 new
                 {
                     message =
-                        ErrorMessages.BookNotFound
+                        ErrorMessages
+                            .BookNotFound
                 }
             );
         }
@@ -52,35 +54,36 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
-    /*
-     * POST
-     * /api/books
-     */
-
     [HttpPost]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> Create(
-        [FromForm] CreateBookRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult>
+        Create(
+            [FromForm]
+            CreateBookRequest request,
+            CancellationToken cancellationToken)
     {
         try
         {
             var result =
-                await _bookService.CreateAsync(
-                    request,
-                    cancellationToken
-                );
+                await _bookService
+                    .CreateAsync(
+                        request,
+                        cancellationToken
+                    );
 
             return CreatedAtAction(
                 nameof(GetById),
                 new
                 {
-                    id = result.Id
+                    id =
+                        result.Id
                 },
                 result
             );
         }
-        catch (BookRequestException exception)
+        catch (
+            BookRequestException
+            exception)
         {
             return BadRequest(
                 new
@@ -92,11 +95,6 @@ public class BooksController : ControllerBase
         }
         catch (Exception exception)
         {
-            /*
-             * Kullanıcıya teknik exception
-             * göstermiyoruz.
-             */
-
             _logger.LogError(
                 exception,
                 "Kitap oluşturulurken beklenmeyen bir hata oluştu."

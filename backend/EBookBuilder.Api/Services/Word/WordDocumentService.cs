@@ -174,7 +174,7 @@ public class WordDocumentService : IWordDocumentService
     {
         if (paragraphs.Count == 0)
         {
-            return "Başlıksız Bildiri";
+            return "Başlıksız Dosya";
         }
 
         return paragraphs[0].Text;

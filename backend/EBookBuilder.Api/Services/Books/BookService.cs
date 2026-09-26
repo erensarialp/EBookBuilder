@@ -12,11 +12,20 @@ namespace EBookBuilder.Api.Services.Books;
 
 public class BookService : IBookService
 {
-    private readonly AppDbContext _dbContext;
-    private readonly IWebHostEnvironment _environment;
-    private readonly IWordDocumentService _wordDocumentService;
-    private readonly IContactCleanerService _contactCleanerService;
-    private readonly IPdfDocumentService _pdfDocumentService;
+    private readonly AppDbContext
+        _dbContext;
+
+    private readonly IWebHostEnvironment
+        _environment;
+
+    private readonly IWordDocumentService
+        _wordDocumentService;
+
+    private readonly IContactCleanerService
+        _contactCleanerService;
+
+    private readonly IPdfDocumentService
+        _pdfDocumentService;
 
     public BookService(
         AppDbContext dbContext,
@@ -25,46 +34,74 @@ public class BookService : IBookService
         IContactCleanerService contactCleanerService,
         IPdfDocumentService pdfDocumentService)
     {
-        _dbContext = dbContext;
-        _environment = environment;
-        _wordDocumentService = wordDocumentService;
-        _contactCleanerService = contactCleanerService;
-        _pdfDocumentService = pdfDocumentService;
+        _dbContext =
+            dbContext;
+
+        _environment =
+            environment;
+
+        _wordDocumentService =
+            wordDocumentService;
+
+        _contactCleanerService =
+            contactCleanerService;
+
+        _pdfDocumentService =
+            pdfDocumentService;
     }
 
-    public async Task<BookResponse> CreateAsync(
-        CreateBookRequest request,
-        CancellationToken cancellationToken)
+    public async Task<BookResponse>
+        CreateAsync(
+            CreateBookRequest request,
+            CancellationToken cancellationToken)
     {
-        ValidateRequest(request);
-
-        var book = new Book
-        {
-            Name = request.BookName.Trim(),
-            Status = BookStatus.Pending,
-            PdfPath = null
-        };
-
-        _dbContext.Books.Add(book);
-
-        await _dbContext.SaveChangesAsync(
-            cancellationToken
+        ValidateRequest(
+            request
         );
 
-        string? bookDirectory = null;
+        var book =
+            new Book
+            {
+                Name =
+                    request
+                        .BookName
+                        .Trim(),
 
-        try
-        {
-            book.Status = BookStatus.Processing;
+                Status =
+                    BookStatus.Pending,
 
-            await _dbContext.SaveChangesAsync(
+                PdfPath =
+                    null
+            };
+
+        _dbContext
+            .Books
+            .Add(book);
+
+        await _dbContext
+            .SaveChangesAsync(
                 cancellationToken
             );
 
+        string? bookDirectory =
+            null;
+
+        try
+        {
+            book.Status =
+                BookStatus.Processing;
+
+            await _dbContext
+                .SaveChangesAsync(
+                    cancellationToken
+                );
+
             var webRootPath =
-                _environment.WebRootPath
+                _environment
+                    .WebRootPath
                 ?? Path.Combine(
-                    _environment.ContentRootPath,
+                    _environment
+                        .ContentRootPath,
                     "wwwroot"
                 );
 
@@ -97,16 +134,21 @@ public class BookService : IBookService
             );
 
             var pdfPapers =
-                new List<PdfPaperContent>();
+                new List<
+                    PdfPaperContent
+                >();
 
             for (
                 var index = 0;
-                index < request.Files.Count;
+                index <
+                    request.Files.Count;
                 index++
             )
             {
                 var file =
-                    request.Files[index];
+                    request.Files[
+                        index
+                    ];
 
                 var originalFileName =
                     Path.GetFileName(
@@ -127,23 +169,30 @@ public class BookService : IBookService
                     var stream =
                         new FileStream(
                             physicalPath,
-                            FileMode.CreateNew,
-                            FileAccess.Write,
-                            FileShare.None,
-                            bufferSize: 81920,
-                            useAsync: true
+                            FileMode
+                                .CreateNew,
+                            FileAccess
+                                .Write,
+                            FileShare
+                                .None,
+                            bufferSize:
+                                81920,
+                            useAsync:
+                                true
                         )
                 )
                 {
-                    await file.CopyToAsync(
-                        stream,
-                        cancellationToken
-                    );
+                    await file
+                        .CopyToAsync(
+                            stream,
+                            cancellationToken
+                        );
                 }
 
                 var relativePath =
-                    $"/storage/books/" +
-                    $"{book.Id}/originals/" +
+                    "/storage/books/" +
+                    $"{book.Id}/" +
+                    "originals/" +
                     $"{storageFileName}";
 
                 var parsedDocument =
@@ -152,11 +201,53 @@ public class BookService : IBookService
                             physicalPath
                         );
 
+                var hasContent =
+                    parsedDocument
+                        .Paragraphs
+                        .Any(
+                            paragraph =>
+                                !string
+                                    .IsNullOrWhiteSpace(
+                                        paragraph
+                                            .Text
+                                    )
+                        );
+
+                if (!hasContent)
+                {
+                    throw new
+                        BookRequestException(
+                            $"\"{originalFileName}\" " +
+                            $"{ErrorMessages.DocumentHasNoContent}"
+                        );
+                }
+
                 var cleanedDocument =
                     _contactCleanerService
                         .CleanDocument(
                             parsedDocument
                         );
+
+                var hasCleanContent =
+                    cleanedDocument
+                        .Paragraphs
+                        .Any(
+                            paragraph =>
+                                !string
+                                    .IsNullOrWhiteSpace(
+                                        paragraph
+                                            .Text
+                                    )
+                        );
+
+                if (!hasCleanContent)
+                {
+                    throw new
+                        BookRequestException(
+                            $"\"{originalFileName}\" " +
+                            $"{ErrorMessages.DocumentHasNoContent}"
+                        );
+                }
 
                 var paper =
                     new Paper
@@ -171,7 +262,8 @@ public class BookService : IBookService
                             relativePath,
 
                         Title =
-                            cleanedDocument.Title,
+                            cleanedDocument
+                                .Title,
 
                         OrderIndex =
                             index + 1,
@@ -188,13 +280,15 @@ public class BookService : IBookService
                     new PdfPaperContent
                     {
                         Title =
-                            cleanedDocument.Title,
+                            cleanedDocument
+                                .Title,
 
                         OrderIndex =
                             index + 1,
 
                         Paragraphs =
-                            cleanedDocument.Paragraphs
+                            cleanedDocument
+                                .Paragraphs
                     }
                 );
             }
@@ -210,8 +304,6 @@ public class BookService : IBookService
                     pdfFileName
                 );
 
-            // PDF oluşturulur ve her bildirinin
-            // gerçek başlangıç sayfası alınır.
             var startPages =
                 _pdfDocumentService
                     .GenerateBook(
@@ -220,18 +312,18 @@ public class BookService : IBookService
                         physicalPdfPath
                     );
 
-            // QuestPDF tarafından hesaplanan gerçek
-            // başlangıç sayfaları Paper kayıtlarına yazılır.
             foreach (
                 var paper
                 in book.Papers
             )
             {
                 if (
-                    startPages.TryGetValue(
-                        paper.OrderIndex,
-                        out var startPage
-                    )
+                    startPages
+                        .TryGetValue(
+                            paper
+                                .OrderIndex,
+                            out var startPage
+                        )
                 )
                 {
                     paper.StartPage =
@@ -240,8 +332,9 @@ public class BookService : IBookService
             }
 
             var relativePdfPath =
-                $"/storage/books/" +
-                $"{book.Id}/output/" +
+                "/storage/books/" +
+                $"{book.Id}/" +
+                "output/" +
                 $"{pdfFileName}";
 
             book.PdfPath =
@@ -250,9 +343,10 @@ public class BookService : IBookService
             book.Status =
                 BookStatus.Completed;
 
-            await _dbContext.SaveChangesAsync(
-                cancellationToken
-            );
+            await _dbContext
+                .SaveChangesAsync(
+                    cancellationToken
+                );
 
             return MapToResponse(
                 book
@@ -268,16 +362,19 @@ public class BookService : IBookService
                     .Where(
                         entry =>
                             entry.State ==
-                            EntityState.Added
+                            EntityState
+                                .Added
                     )
             )
             {
                 entry.State =
-                    EntityState.Detached;
+                    EntityState
+                        .Detached;
             }
 
             if (
-                bookDirectory is not null &&
+                bookDirectory is not
+                    null &&
                 Directory.Exists(
                     bookDirectory
                 )
@@ -285,34 +382,43 @@ public class BookService : IBookService
             {
                 Directory.Delete(
                     bookDirectory,
-                    recursive: true
+                    recursive:
+                        true
                 );
             }
 
-            book.PdfPath = null;
-            book.Status = BookStatus.Failed;
+            book.PdfPath =
+                null;
 
-            await _dbContext.SaveChangesAsync(
-                cancellationToken
-            );
+            book.Status =
+                BookStatus.Failed;
+
+            await _dbContext
+                .SaveChangesAsync(
+                    cancellationToken
+                );
 
             throw;
         }
     }
 
-    public async Task<BookResponse?> GetByIdAsync(
-        int id,
-        CancellationToken cancellationToken)
+    public async Task<BookResponse?>
+        GetByIdAsync(
+            int id,
+            CancellationToken cancellationToken)
     {
         var book =
             await _dbContext
                 .Books
                 .AsNoTracking()
                 .Include(
-                    x => x.Papers
+                    book =>
+                        book.Papers
                 )
                 .FirstOrDefaultAsync(
-                    x => x.Id == id,
+                    book =>
+                        book.Id ==
+                        id,
                     cancellationToken
                 );
 
@@ -326,8 +432,9 @@ public class BookService : IBookService
         );
     }
 
-    private static void ValidateRequest(
-        CreateBookRequest request)
+    private static void
+        ValidateRequest(
+            CreateBookRequest request)
     {
         if (
             string.IsNullOrWhiteSpace(
@@ -335,10 +442,11 @@ public class BookService : IBookService
             )
         )
         {
-            throw new BookRequestException(
-                ErrorMessages
-                    .BookNameRequired
-            );
+            throw new
+                BookRequestException(
+                    ErrorMessages
+                        .BookNameRequired
+                );
         }
 
         if (
@@ -346,10 +454,11 @@ public class BookService : IBookService
             request.Files.Count != 10
         )
         {
-            throw new BookRequestException(
-                ErrorMessages
-                    .ExactlyTenDocumentsRequired
-            );
+            throw new
+                BookRequestException(
+                    ErrorMessages
+                        .ExactlyTenDocumentsRequired
+                );
         }
 
         foreach (
@@ -370,27 +479,31 @@ public class BookService : IBookService
                 )
             )
             {
-                throw new BookRequestException(
-                    ErrorMessages
-                        .InvalidDocumentType
-                );
+                throw new
+                    BookRequestException(
+                        ErrorMessages
+                            .InvalidDocumentType
+                    );
             }
 
             if (file.Length == 0)
             {
-                throw new BookRequestException(
-                    ErrorMessages
-                        .EmptyDocument
-                );
+                throw new
+                    BookRequestException(
+                        $"\"{file.FileName}\" " +
+                        $"{ErrorMessages.EmptyDocument}"
+                    );
             }
         }
     }
 
-    private static string CreateSafePdfFileName(
-        string bookName)
+    private static string
+        CreateSafePdfFileName(
+            string bookName)
     {
         var invalidCharacters =
-            Path.GetInvalidFileNameChars();
+            Path
+                .GetInvalidFileNameChars();
 
         var safeName =
             new string(
@@ -412,7 +525,9 @@ public class BookService : IBookService
             safeName.Trim();
 
         safeName =
-            safeName.TrimEnd('.');
+            safeName.TrimEnd(
+                '.'
+            );
 
         if (
             string.IsNullOrWhiteSpace(
@@ -428,8 +543,9 @@ public class BookService : IBookService
             $"{safeName}.pdf";
     }
 
-    private static BookResponse MapToResponse(
-        Book book)
+    private static BookResponse
+        MapToResponse(
+            Book book)
     {
         return new BookResponse
         {
@@ -440,7 +556,8 @@ public class BookService : IBookService
                 book.Name,
 
             Status =
-                book.Status.ToString(),
+                book.Status
+                    .ToString(),
 
             PdfPath =
                 book.PdfPath,
@@ -448,8 +565,9 @@ public class BookService : IBookService
             Papers =
                 book.Papers
                     .OrderBy(
-                        x =>
-                            x.OrderIndex
+                        paper =>
+                            paper
+                                .OrderIndex
                     )
                     .Select(
                         paper =>
@@ -459,16 +577,19 @@ public class BookService : IBookService
                                     paper.Id,
 
                                 FileName =
-                                    paper.FileName,
+                                    paper
+                                        .FileName,
 
                                 Title =
                                     paper.Title,
 
                                 OrderIndex =
-                                    paper.OrderIndex,
+                                    paper
+                                        .OrderIndex,
 
                                 StartPage =
-                                    paper.StartPage
+                                    paper
+                                        .StartPage
                             }
                     )
                     .ToList()

@@ -88,7 +88,7 @@ function PdfResult({
                   text-[#6B7280]
                 "
               >
-                {documentCount} bildiri • PDF
+                {documentCount} dosya • PDF
               </p>
             </div>
           </div>
