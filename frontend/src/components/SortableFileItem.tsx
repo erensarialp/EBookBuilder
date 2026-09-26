@@ -57,8 +57,6 @@ function SortableFileItem({
         }
       `}
     >
-      {/* DRAG HANDLE */}
-
       <button
         ref={sortable.handleRef}
         type="button"
@@ -81,8 +79,6 @@ function SortableFileItem({
         <GripVertical size={18} />
       </button>
 
-      {/* SIRA NUMARASI */}
-
       <div
         className="
           flex
@@ -101,8 +97,6 @@ function SortableFileItem({
         {index + 1}
       </div>
 
-      {/* FILE ICON */}
-
       <div
         className="
           hidden
@@ -120,8 +114,6 @@ function SortableFileItem({
         <FileText size={18} />
       </div>
 
-      {/* FILE INFORMATION */}
-
       <div className="min-w-0 flex-1">
         <p
           className="
@@ -138,8 +130,6 @@ function SortableFileItem({
           {formatFileSize(item.size)}
         </p>
       </div>
-
-      {/* DELETE */}
 
       <button
         type="button"

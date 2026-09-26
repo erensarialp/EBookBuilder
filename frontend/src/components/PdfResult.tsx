@@ -20,8 +20,6 @@ function PdfResult({
 }: PdfResultProps) {
   return (
     <div className="space-y-6">
-      {/* SUCCESS CARD */}
-
       <div
         className="
           rounded-2xl
@@ -175,8 +173,6 @@ function PdfResult({
           </div>
         </div>
       </div>
-
-      {/* PDF PREVIEW */}
 
       <div>
         <h3

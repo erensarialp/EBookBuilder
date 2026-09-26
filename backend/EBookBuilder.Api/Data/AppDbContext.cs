@@ -17,7 +17,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // BOOKS
         modelBuilder.Entity<Book>(entity =>
         {
             entity.ToTable("Books");
@@ -37,7 +36,6 @@ public class AppDbContext : DbContext
                 .HasMaxLength(500);
         });
 
-        // PAPERS
         modelBuilder.Entity<Paper>(entity =>
         {
             entity.ToTable("Papers");
@@ -59,7 +57,6 @@ public class AppDbContext : DbContext
             entity.Property(x => x.OrderIndex)
                 .IsRequired();
 
-            // Aynı kitap içinde aynı sıra numarası tekrar edemesin
             entity.HasIndex(x => new
             {
                 x.BookId,
@@ -67,7 +64,6 @@ public class AppDbContext : DbContext
             })
             .IsUnique();
 
-            // Book 1 --- N Paper
             entity.HasOne(x => x.Book)
                 .WithMany(x => x.Papers)
                 .HasForeignKey(x => x.BookId)
