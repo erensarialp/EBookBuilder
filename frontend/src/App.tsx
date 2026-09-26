@@ -550,7 +550,7 @@ function App() {
           >
             <SectionTitle
               number={2}
-              title="Bildirileri Yükle"
+              title="Dosyaları Yükle"
             />
 
             <div className="mt-5">
@@ -583,7 +583,7 @@ function App() {
             >
               <SectionTitle
                 number={3}
-                title="Yüklenen Bildiriler"
+                title="Yüklenen Dosyalar"
               />
 
               <span
@@ -941,7 +941,7 @@ function Header() {
               sm:text-sm
             "
           >
-            Word bildirilerinizi
+            Word dosyalarınızı
             tek bir düzenli PDF
             e-kitaba dönüştürün.
           </p>
