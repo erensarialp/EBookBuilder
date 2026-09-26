@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/EBookBuilder.Api/EBookBuilder.Api.csproj" />
+  </Folder>
+  <Project Path="EBookBuilder.Tests/EBookBuilder.Tests.csproj" />
+</Solution>
